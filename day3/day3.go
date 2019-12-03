@@ -58,24 +58,11 @@ func unravelWires(centerX, centerY int) {
 }
 
 func unravelWire(centerX, centerY int, wire []string, val int) {
-	logger.Info(
-		"starting coordinates",
-		zap.Int("center-x", centerX),
-		zap.Int("center-y", centerY),
-	)
 	curX := centerX
 	curY := centerY
 
 	for _, movement := range wire {
 		direction, size := dirAndSize(movement)
-
-		logger.Info(
-			"current position",
-			zap.Int("curr-x", curX),
-			zap.Int("curr-y", curY),
-			zap.String("direction", direction),
-			zap.Int("size", size),
-		)
 
 		switch direction {
 		case "R":
@@ -91,12 +78,6 @@ func unravelWire(centerX, centerY int, wire []string, val int) {
 			curX -= size
 		case "D":
 			for y := curY + 1; y <= (curY + size); y++ {
-				logger.Info(
-					"down movement",
-					zap.Int("curr-x", curX),
-					zap.Int("y", y),
-					zap.Int("current-val", grid[y][curX]),
-				)
 				grid[y][curX] += val
 			}
 			curY += size
@@ -107,13 +88,6 @@ func unravelWire(centerX, centerY int, wire []string, val int) {
 			curY -= size
 		}
 	}
-
-	logger.Info(
-		"ending coordinates",
-		zap.Int("curr-x", curX),
-		zap.Int("curr-y", curY),
-	)
-
 }
 
 func makeGrid(maxX, maxY int) {
