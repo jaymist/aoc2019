@@ -15,9 +15,51 @@ func main() {
 	wire1Points := calculatePoints(wire1)
 	wire2Points := calculatePoints(wire2)
 
-	intersections := intersectPoints(wire1Points, wire2Points)
-	result := shortestManhattanDistance(intersections)
-	logger.Sugar().Infof("RESULT: %d", result)
+	shortestDelay := shortestSignalDelay(wire1Points, wire2Points)
+
+	logger.Sugar().Infof("RESULT: %d", shortestDelay)
+}
+
+func shortestSignalDelay(w1Points, w2Points Points) int {
+	minimumDelay := math.Inf(1)
+	w1signalDelay := 0
+
+	for w1Index := 1; w1Index < len(w1Points); w1Index++ {
+		w1p1 := w1Points[w1Index-1]
+		w1p2 := w1Points[w1Index]
+		w2signalDelay := 0
+
+		for w2Index := 1; w2Index < len(w2Points); w2Index++ {
+			w2p1 := w2Points[w2Index-1]
+			w2p2 := w2Points[w2Index]
+
+			intersect, intersectPoint := intersectionPoint(w1p1, w1p2, w2p1, w2p2)
+
+			if intersect {
+				w1IntDelay := lineLength(w1p1, intersectPoint)
+				w2IntDelay := lineLength(w2p1, intersectPoint)
+
+				intersectDelay := float64(w1signalDelay + w1IntDelay + w2signalDelay + w2IntDelay)
+				minimumDelay = math.Min(minimumDelay, intersectDelay)
+			}
+
+			w2signalDelay += lineLength(w2p1, w2p2)
+
+			if intersect {
+				break
+			}
+		}
+		w1signalDelay += lineLength(w1p1, w1p2)
+	}
+
+	return int(minimumDelay)
+}
+
+func lineLength(A, B Point) int {
+	x := math.Abs(float64(A[0] - B[0]))
+	y := math.Abs(float64(A[1] - B[1]))
+
+	return int(x + y)
 }
 
 func shortestManhattanDistance(intersections Points) int {
