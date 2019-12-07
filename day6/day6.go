@@ -9,11 +9,18 @@ type OrbitData struct {
 	name     string
 	data     []*OrbitData
 	distance int
+	parent   *OrbitData
 }
 
 type OrbitMap map[string]*OrbitData
 
 var root *OrbitData
+var you *OrbitData
+var santa *OrbitData
+
+//var youPath []string
+//var santaPath []string
+
 var orbitMap = make(OrbitMap)
 var logger, _ = zap.NewDevelopment()
 
@@ -22,20 +29,63 @@ func main() {
 		planetData := strings.Split(data, ")")
 		name := planetData[0]
 		mainPlanet := getPlanet(name)
+
 		if name == "COM" {
 			root = mainPlanet
 			root.distance = 0
 		}
 
-		orbitPlanet := getPlanet(planetData[1])
+		name = planetData[1]
+		orbitPlanet := getPlanet(name)
+		if name == "YOU" {
+			you = orbitPlanet
+		} else if name == "SAN" {
+			santa = orbitPlanet
+		}
+
 		mainPlanet.data = append(mainPlanet.data, orbitPlanet)
+		orbitPlanet.parent = mainPlanet
 	}
 
-	setDistance(root)
+	youPath := buildPath(you)
+	logger.Info("you-path", zap.Strings("planets", youPath))
+	santaPath := buildPath(santa)
+	logger.Info("santa-path", zap.Strings("planets", santaPath))
 
-	orbitTotal := orbitCount(root)
+	shortest := youPath
+	longest := santaPath
+	if len(santaPath) < len(youPath) {
+		longest = youPath
+		shortest = santaPath
+	}
 
-	logger.Sugar().Infof("RESULT: %d", orbitTotal)
+	result := 0
+	for index, planet := range shortest {
+		if planet == longest[index] {
+			continue
+		}
+
+		logger.Info("mismatch", zap.String("planet", planet), zap.Int("index", index))
+
+		shortestLength := len(shortest) - index
+		longestLength := len(longest) - index
+
+		logger.Info("lengths", zap.Int("shortest", shortestLength), zap.Int("longest", longestLength))
+
+		result = shortestLength + longestLength
+	}
+	logger.Info("santa-you-path", zap.Int("length", result))
+}
+
+func buildPath(start *OrbitData) []string {
+	var planets []string
+
+	if start.parent != nil {
+		planets = append([]string{start.parent.name}, planets...)
+		planets = append(buildPath(start.parent), planets...)
+	}
+
+	return planets
 }
 
 func setDistance(planet *OrbitData) {
